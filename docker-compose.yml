@@ -1,0 +1,110 @@
+version: "3.9"
+
+# =============================================================================
+# Docker Compose – Polyglot Persistence Demo
+# Services: frontend + backend ONLY.
+# Databases are external – supply connection info via environment variables.
+# =============================================================================
+
+services:
+
+  # ---------------------------------------------------------------------------
+  # Backend – Python FastAPI
+  # ---------------------------------------------------------------------------
+  backend:
+    image: polyglot-backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: polyglot-backend
+    restart: unless-stopped
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    environment:
+      # App
+      APP_NAME:      "${APP_NAME:-polyglot-crud-api}"
+      APP_ENV:       "${APP_ENV:-production}"
+
+      # PostgreSQL – external managed service / DBaaS
+      POSTGRES_HOST:     "${POSTGRES_HOST}"
+      POSTGRES_PORT:     "${POSTGRES_PORT:-5432}"
+      POSTGRES_DB:       "${POSTGRES_DB}"
+      POSTGRES_USER:     "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+
+      # MySQL – external managed service / DBaaS
+      MYSQL_HOST:     "${MYSQL_HOST}"
+      MYSQL_PORT:     "${MYSQL_PORT:-3306}"
+      MYSQL_DB:       "${MYSQL_DB}"
+      MYSQL_USER:     "${MYSQL_USER}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+
+      # MongoDB – external managed service / DBaaS
+      MONGO_HOST:        "${MONGO_HOST}"
+      MONGO_PORT:        "${MONGO_PORT:-27017}"
+      MONGO_DB:          "${MONGO_DB}"
+      MONGO_USER:        "${MONGO_USER}"
+      MONGO_PASSWORD:    "${MONGO_PASSWORD}"
+      MONGO_AUTH_SOURCE: "${MONGO_AUTH_SOURCE:-admin}"
+
+      # Redis – external managed service / DBaaS
+      REDIS_HOST:     "${REDIS_HOST}"
+      REDIS_PORT:     "${REDIS_PORT:-6379}"
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"
+      REDIS_DB:       "${REDIS_DB:-0}"
+      CACHE_TTL:      "${CACHE_TTL:-300}"
+
+      # CORS – allow frontend origin
+      CORS_ORIGINS: "${CORS_ORIGINS:-http://localhost:3000}"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    networks:
+      - polyglot-net
+
+  # ---------------------------------------------------------------------------
+  # Frontend – React + Nginx
+  # ---------------------------------------------------------------------------
+  frontend:
+    image: polyglot-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Leave empty → relative URLs → Nginx proxies to backend container
+        VITE_API_BASE_URL: "${VITE_API_BASE_URL:-}"
+    container_name: polyglot-frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT:-3000}:80"
+    depends_on:
+      - backend
+    networks:
+      - polyglot-net
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  polyglot-net:
+    driver: bridge
+
+# =============================================================================
+# Usage:
+#
+#   1. Copy .env.example to .env and fill in DB credentials
+#   2. Build images:
+#        docker compose build
+#   3. Start services:
+#        docker compose up -d
+#   4. Check readiness:
+#        curl http://localhost:8000/ready
+#   5. Open browser:
+#        http://localhost:3000
+#
+# Databases are NOT started by this compose file.
+# Provide their hostnames/IPs via environment variables.
+# =============================================================================
