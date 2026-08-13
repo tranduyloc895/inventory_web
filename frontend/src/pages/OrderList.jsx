@@ -32,13 +32,13 @@ const OrderList = ({ showToast }) => {
     setCreating(true);
     try {
       const payload = {
-        status: 'pending',
         notes: formData.notes,
         items: [
           {
             product_id: parseInt(formData.product_id, 10),
+            product_name: 'Manual Order', // Required by backend schema
             quantity: parseInt(formData.quantity, 10),
-            unit_price: 0 // Ideally fetched, but we'll let backend handle or ignore for now if simple
+            unit_price: 0
           }
         ]
       };
