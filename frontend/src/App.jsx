@@ -5,6 +5,9 @@ import ProductList from './pages/ProductList';
 import ProductForm from './pages/ProductForm';
 import ProductDetail from './pages/ProductDetail';
 import OrderList from './pages/OrderList';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import ProtectedRoute from './components/ProtectedRoute';
 import Toast from './components/Toast';
 import { useState, useEffect } from 'react';
 import { getReadiness } from './services/api';
@@ -41,12 +44,17 @@ function App() {
       <Navbar dbStatus={dbStatus} />
       <div className="main-content">
         <Routes>
-          <Route path="/" element={<Dashboard dbStatus={dbStatus} />} />
-          <Route path="/products" element={<ProductList showToast={showToast} />} />
-          <Route path="/products/new" element={<ProductForm showToast={showToast} />} />
-          <Route path="/products/:id" element={<ProductDetail showToast={showToast} />} />
-          <Route path="/products/:id/edit" element={<ProductForm showToast={showToast} />} />
-          <Route path="/orders" element={<OrderList showToast={showToast} />} />
+          <Route path="/login" element={<Login showToast={showToast} />} />
+          <Route path="/register" element={<Register showToast={showToast} />} />
+          
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<Dashboard dbStatus={dbStatus} />} />
+            <Route path="/products" element={<ProductList showToast={showToast} />} />
+            <Route path="/products/new" element={<ProductForm showToast={showToast} />} />
+            <Route path="/products/:id" element={<ProductDetail showToast={showToast} />} />
+            <Route path="/products/:id/edit" element={<ProductForm showToast={showToast} />} />
+            <Route path="/orders" element={<OrderList showToast={showToast} />} />
+          </Route>
         </Routes>
         
         <footer className="app-footer">

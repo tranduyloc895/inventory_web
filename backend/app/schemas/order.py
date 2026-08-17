@@ -4,9 +4,7 @@ from datetime import datetime
 
 class OrderItemBase(BaseModel):
     product_id: int
-    product_name: str
     quantity: int = Field(..., gt=0)
-    unit_price: float = Field(..., ge=0)
 
 class OrderItemCreate(OrderItemBase):
     pass
@@ -14,6 +12,8 @@ class OrderItemCreate(OrderItemBase):
 class OrderItemResponse(OrderItemBase):
     id: int
     order_id: int
+    product_name: str
+    unit_price: float
     subtotal: float
 
     model_config = ConfigDict(from_attributes=True)
@@ -24,6 +24,7 @@ class OrderCreate(BaseModel):
 
 class OrderResponse(BaseModel):
     id: int
+    user_id: Optional[int] = None
     created_at: Optional[datetime] = None
     total_amount: float
     status: str

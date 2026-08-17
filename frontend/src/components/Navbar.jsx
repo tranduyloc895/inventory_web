@@ -1,6 +1,15 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
 
 const Navbar = ({ dbStatus }) => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
   const renderDbStatus = () => {
     if (!dbStatus) return <p className="db-status-item">Loading status...</p>;
     
@@ -48,6 +57,17 @@ const Navbar = ({ dbStatus }) => {
           </NavLink>
         </li>
       </ul>
+
+      {user && (
+        <div style={{ marginTop: 'auto', padding: '0 1rem' }}>
+          <p style={{ color: '#aaa', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+            Logged in as <b>{user.email}</b> ({user.role})
+          </p>
+          <button onClick={handleLogout} className="btn btn-secondary" style={{ width: '100%', marginBottom: '1rem' }}>
+            Logout
+          </button>
+        </div>
+      )}
 
       <div className="sidebar-footer">
         <h3 style={{ fontSize: '0.875rem', marginBottom: '0.5rem', color: '#fff' }}>DB Health</h3>

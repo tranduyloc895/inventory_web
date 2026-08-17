@@ -7,6 +7,7 @@ class Order(Base):
     __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, nullable=True) # ID from PostgreSQL users table. Nullable for legacy orders.
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     total_amount = Column(Float, default=0.0)
     status = Column(String(50), default="pending")  # pending, completed, cancelled

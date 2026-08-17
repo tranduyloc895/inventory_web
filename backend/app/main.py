@@ -12,7 +12,7 @@ from app.database.mysql import engine as mysql_engine, Base as MysqlBase
 from app.database.mongodb import get_mongo_db, close_mongo_client
 from app.database.redis_client import init_redis, close_redis
 
-from app.api import products, orders, events, health
+from app.api import products, orders, events, health, auth
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)

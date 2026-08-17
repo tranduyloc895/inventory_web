@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useOrders } from '../hooks/useOrders';
-import { createOrder } from '../services/api';
+import { createOrder, updateOrderStatus } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { useAuth } from '../hooks/useAuth';
 
 const OrderList = ({ showToast }) => {
   const { orders, loading, error, fetchOrders } = useOrders();
+  const { user } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [creating, setCreating] = useState(false);
   const [formData, setFormData] = useState({
@@ -22,6 +24,16 @@ const OrderList = ({ showToast }) => {
     }
   };
 
+  const handleUpdateStatus = async (orderId, newStatus) => {
+    try {
+      await updateOrderStatus(orderId, newStatus);
+      showToast('Order status updated');
+      fetchOrders();
+    } catch (err) {
+      showToast(err.response?.data?.detail || 'Failed to update status', 'error');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.product_id || formData.quantity < 1) {
@@ -36,9 +48,7 @@ const OrderList = ({ showToast }) => {
         items: [
           {
             product_id: parseInt(formData.product_id, 10),
-            product_name: 'Manual Order', // Required by backend schema
-            quantity: parseInt(formData.quantity, 10),
-            unit_price: 0
+            quantity: parseInt(formData.quantity, 10)
           }
         ]
       };
@@ -61,9 +71,11 @@ const OrderList = ({ showToast }) => {
     <div>
       <div className="flex-between mb-4">
         <h1>Orders</h1>
-        <button onClick={() => setShowModal(true)} className="btn btn-primary">
-          + Create Order
-        </button>
+        {user?.role !== 'admin' && (
+          <button onClick={() => setShowModal(true)} className="btn btn-primary">
+            + Create Order
+          </button>
+        )}
       </div>
 
       <div className="card">
@@ -72,17 +84,20 @@ const OrderList = ({ showToast }) => {
             <thead>
               <tr>
                 <th>Order ID</th>
+                {user?.role === 'admin' && <th>User ID</th>}
                 <th>Date</th>
                 <th>Status</th>
                 <th>Total Amount</th>
                 <th>Items Count</th>
                 <th>Notes</th>
+                {user?.role === 'admin' && <th>Actions</th>}
               </tr>
             </thead>
             <tbody>
               {orders.map(order => (
                 <tr key={order.id}>
                   <td>#{order.id}</td>
+                  {user?.role === 'admin' && <td>{order.user_id}</td>}
                   <td>{new Date(order.created_at).toLocaleString()}</td>
                   <td>
                     <span className={`badge ${getStatusBadge(order.status)}`}>
@@ -92,11 +107,23 @@ const OrderList = ({ showToast }) => {
                   <td>${(order.total_amount || 0).toFixed(2)}</td>
                   <td>{order.items?.length || 0}</td>
                   <td>{order.notes || '-'}</td>
+                  {user?.role === 'admin' && (
+                    <td>
+                      {order.status !== 'completed' && (
+                        <button 
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => handleUpdateStatus(order.id, 'completed')}
+                        >
+                          Complete
+                        </button>
+                      )}
+                    </td>
+                  )}
                 </tr>
               ))}
               {orders.length === 0 && (
                 <tr>
-                  <td colSpan="6" style={{ textAlign: 'center' }}>No orders found.</td>
+                  <td colSpan={user?.role === 'admin' ? "8" : "6"} style={{ textAlign: 'center' }}>No orders found.</td>
                 </tr>
               )}
             </tbody>

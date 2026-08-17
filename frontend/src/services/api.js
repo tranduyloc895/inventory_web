@@ -15,10 +15,22 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 const systemApi = axios.create({
   baseURL: BASE_ORIGIN,
   headers: { 'Content-Type': 'application/json' },
 });
+
+// Auth
+export const login             = (data)     => api.post('/auth/login', data, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+export const register          = (data)     => api.post('/auth/register', data);
 
 // Products
 export const getProducts       = ()         => api.get('/products/');
@@ -32,6 +44,7 @@ export const getProductSales   = (id)       => api.get(`/products/${id}/sales`);
 // Orders
 export const getOrders         = ()         => api.get('/orders/');
 export const createOrder       = (data)     => api.post('/orders/', data);
+export const updateOrderStatus = (id, status) => api.put(`/orders/${id}/status`, { status });
 
 // Events
 export const getProductEvents  = (id)       => api.get(`/products/${id}/events`);
