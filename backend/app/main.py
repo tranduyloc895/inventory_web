@@ -12,7 +12,7 @@ from app.database.mysql import engine as mysql_engine, Base as MysqlBase
 from app.database.mongodb import get_mongo_db, close_mongo_client
 from app.database.redis_client import init_redis, close_redis
 
-from app.api import products, orders, events, health, auth
+from app.api import products, orders, events, health, auth, cart, checkout
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -76,9 +76,12 @@ async def generic_exception_handler(request, exc):
     )
 
 app.include_router(health.router)
+app.include_router(auth.router)
 app.include_router(products.router)
 app.include_router(orders.router)
 app.include_router(events.router)
+app.include_router(cart.router)
+app.include_router(checkout.router)
 
 @app.get("/", include_in_schema=False)
 async def root():

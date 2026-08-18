@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Text, Float, ForeignKey, DateTime
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
-from app.database.postgres import Base
+from app.database.mysql import Base
 
 class Category(Base):
     __tablename__ = "categories"
@@ -36,6 +36,7 @@ class Product(Base):
     stock = Column(Integer, default=0, nullable=False)
     category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
     supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=True)
+    owner_id = Column(Integer, nullable=True)  # Cross-DB reference to users
     sku = Column(String(50), unique=True, index=True, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

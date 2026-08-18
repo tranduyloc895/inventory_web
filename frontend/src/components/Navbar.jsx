@@ -52,8 +52,13 @@ const Navbar = ({ dbStatus }) => {
           </NavLink>
         </li>
         <li>
+          <NavLink to="/cart" className={({ isActive }) => (isActive ? 'active' : '')}>
+            🛒 Cart
+          </NavLink>
+        </li>
+        <li>
           <NavLink to="/orders" className={({ isActive }) => (isActive ? 'active' : '')}>
-            🛒 Orders
+            🛍️ Orders
           </NavLink>
         </li>
       </ul>

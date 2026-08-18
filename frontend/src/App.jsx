@@ -7,6 +7,8 @@ import ProductDetail from './pages/ProductDetail';
 import OrderList from './pages/OrderList';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Cart from './pages/Cart';
+import Checkout from './pages/Checkout';
 import ProtectedRoute from './components/ProtectedRoute';
 import Toast from './components/Toast';
 import { useState, useEffect } from 'react';
@@ -54,6 +56,8 @@ function App() {
             <Route path="/products/:id" element={<ProductDetail showToast={showToast} />} />
             <Route path="/products/:id/edit" element={<ProductForm showToast={showToast} />} />
             <Route path="/orders" element={<OrderList showToast={showToast} />} />
+            <Route path="/cart" element={<Cart showToast={showToast} />} />
+            <Route path="/checkout" element={<Checkout showToast={showToast} />} />
           </Route>
         </Routes>
         

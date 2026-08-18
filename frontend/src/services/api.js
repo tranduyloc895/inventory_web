@@ -46,6 +46,16 @@ export const getOrders         = ()         => api.get('/orders/');
 export const createOrder       = (data)     => api.post('/orders/', data);
 export const updateOrderStatus = (id, status) => api.put(`/orders/${id}/status`, { status });
 
+// Cart
+export const getCart           = ()         => api.get('/cart/');
+export const addToCart         = (data)     => api.post('/cart/add', data);
+export const clearCart         = ()         => api.delete('/cart/');
+
+// Checkout
+export const startCheckout     = ()         => api.post('/checkout/start');
+export const getCheckoutSession= ()         => api.get('/checkout/session');
+export const completeCheckout  = ()         => api.post('/checkout/complete');
+
 // Events
 export const getProductEvents  = (id)       => api.get(`/products/${id}/events`);
 

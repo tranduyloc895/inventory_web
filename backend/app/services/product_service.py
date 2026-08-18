@@ -26,6 +26,7 @@ def _format_product(product: Product) -> dict:
         "updated_at": product.updated_at.isoformat() if product.updated_at else None,
         "category_name": product.category.name if product.category else None,
         "supplier_name": product.supplier.name if product.supplier else None,
+        "owner_id": product.owner_id,
     }
 
 async def get_products(db: AsyncSession) -> dict:
@@ -61,8 +62,8 @@ async def get_product(db: AsyncSession, product_id: int) -> dict:
     await set_cache(cache_key, formatted_product, settings.CACHE_TTL)
     return formatted_product
 
-async def create_product(db: AsyncSession, data: ProductCreate) -> dict:
-    new_product = Product(**data.model_dump())
+async def create_product(db: AsyncSession, data: ProductCreate, user_id: int) -> dict:
+    new_product = Product(**data.model_dump(), owner_id=user_id)
     db.add(new_product)
     await db.commit()
     await db.refresh(new_product)
@@ -77,13 +78,16 @@ async def create_product(db: AsyncSession, data: ProductCreate) -> dict:
     
     return _format_product(new_product_with_rels)
 
-async def update_product(db: AsyncSession, product_id: int, data: ProductUpdate) -> dict:
+async def update_product(db: AsyncSession, product_id: int, data: ProductUpdate, current_user) -> dict:
     stmt = select(Product).where(Product.id == product_id)
     result = await db.execute(stmt)
     product = result.scalars().first()
     
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+        
+    if current_user.role != "admin" and product.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to update this product")
         
     update_data = data.model_dump(exclude_unset=True)
     old_price = product.price
@@ -112,13 +116,36 @@ async def update_product(db: AsyncSession, product_id: int, data: ProductUpdate)
     
     return _format_product(updated_product)
 
-async def delete_product(db: AsyncSession, product_id: int) -> None:
+async def delete_product(db: AsyncSession, pg_db: AsyncSession, product_id: int, current_user) -> None:
     stmt = select(Product).where(Product.id == product_id)
     result = await db.execute(stmt)
     product = result.scalars().first()
     
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+        
+    if current_user.role != "admin" and product.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to delete this product")
+        
+    # --- Cross-DB Cascade Delete ---
+    from app.models.order import Order, OrderItem
+    # Find all orders containing this product
+    order_stmt = select(OrderItem.order_id).where(OrderItem.product_id == product_id)
+    order_result = await pg_db.execute(order_stmt)
+    order_ids = order_result.scalars().all()
+    
+    if order_ids:
+        from sqlalchemy import delete
+        
+        # First, delete all order_items belonging to these orders to avoid FK violation
+        del_items_stmt = delete(OrderItem).where(OrderItem.order_id.in_(order_ids))
+        await pg_db.execute(del_items_stmt)
+        
+        # Then, delete the orders
+        del_stmt = delete(Order).where(Order.id.in_(order_ids))
+        await pg_db.execute(del_stmt)
+        await pg_db.commit()
+    # -------------------------------
         
     await db.delete(product)
     await db.commit()

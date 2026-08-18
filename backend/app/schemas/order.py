@@ -29,6 +29,7 @@ class OrderResponse(BaseModel):
     total_amount: float
     status: str
     notes: Optional[str] = None
+    can_process: bool = False
     items: List[OrderItemResponse]
 
     model_config = ConfigDict(from_attributes=True)

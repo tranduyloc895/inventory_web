@@ -3,11 +3,15 @@ import { Link } from 'react-router-dom';
 import { useProducts } from '../hooks/useProducts';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ConfirmDialog from '../components/ConfirmDialog';
+import { addToCart } from '../services/api';
+import { useAuth } from '../hooks/useAuth';
 
 const ProductList = ({ showToast }) => {
   const { products, loading, error, removeProduct } = useProducts();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [deleteId, setDeleteId] = useState(null);
+  const [addingToCart, setAddingToCart] = useState(null);
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => 
@@ -25,6 +29,18 @@ const ProductList = ({ showToast }) => {
       showToast('Failed to delete product', 'error');
     }
     setDeleteId(null);
+  };
+
+  const handleAddToCart = async (productId) => {
+    setAddingToCart(productId);
+    try {
+      await addToCart({ product_id: productId, quantity: 1 });
+      showToast('Added to cart successfully!');
+    } catch (err) {
+      showToast(err.response?.data?.detail || 'Failed to add to cart', 'error');
+    } finally {
+      setAddingToCart(null);
+    }
   };
 
   if (loading) return <LoadingSpinner />;
@@ -70,7 +86,7 @@ const ProductList = ({ showToast }) => {
                   <td>{product.id}</td>
                   <td>{product.name}</td>
                   <td>{product.sku}</td>
-                  <td>{product.category || 'N/A'}</td>
+                  <td>{product.category_name || 'N/A'}</td>
                   <td>${product.price.toFixed(2)}</td>
                   <td>
                     <span className={`badge ${product.stock < 10 ? 'badge-danger' : product.stock < 50 ? 'badge-warning' : 'badge-success'}`}>
@@ -79,9 +95,20 @@ const ProductList = ({ showToast }) => {
                   </td>
                   <td>
                     <div className="table-actions">
+                      <button 
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => handleAddToCart(product.id)}
+                        disabled={addingToCart === product.id}
+                      >
+                        {addingToCart === product.id ? 'Adding...' : 'Add to Cart'}
+                      </button>
                       <Link to={`/products/${product.id}`} className="btn btn-secondary btn-sm">View</Link>
-                      <Link to={`/products/${product.id}/edit`} className="btn btn-primary btn-sm">Edit</Link>
-                      <button onClick={() => setDeleteId(product.id)} className="btn btn-danger btn-sm">Delete</button>
+                      {(user?.role === 'admin' || user?.id === product.owner_id) && (
+                        <>
+                          <Link to={`/products/${product.id}/edit`} className="btn btn-primary btn-sm">Edit</Link>
+                          <button onClick={() => setDeleteId(product.id)} className="btn btn-danger btn-sm">Delete</button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>

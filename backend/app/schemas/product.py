@@ -59,6 +59,7 @@ class ProductResponse(ProductBase):
     updated_at: Optional[datetime] = None
     category_name: Optional[str] = None
     supplier_name: Optional[str] = None
+    owner_id: Optional[int] = None
 
     model_config = ConfigDict(from_attributes=True)
 

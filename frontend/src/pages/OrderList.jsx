@@ -90,7 +90,7 @@ const OrderList = ({ showToast }) => {
                 <th>Total Amount</th>
                 <th>Items Count</th>
                 <th>Notes</th>
-                {user?.role === 'admin' && <th>Actions</th>}
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -107,23 +107,28 @@ const OrderList = ({ showToast }) => {
                   <td>${(order.total_amount || 0).toFixed(2)}</td>
                   <td>{order.items?.length || 0}</td>
                   <td>{order.notes || '-'}</td>
-                  {user?.role === 'admin' && (
-                    <td>
-                      {order.status !== 'completed' && (
-                        <button 
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => handleUpdateStatus(order.id, 'completed')}
-                        >
-                          Complete
-                        </button>
-                      )}
-                    </td>
-                  )}
+                  <td>
+                    {order.can_process && order.status !== 'completed' ? (
+                      <button 
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => handleUpdateStatus(order.id, 'completed')}
+                      >
+                        Complete
+                      </button>
+                    ) : (
+                      <button 
+                        className="btn btn-outline-secondary btn-sm"
+                        onClick={() => showToast('Order details view is under construction', 'info')}
+                      >
+                        View
+                      </button>
+                    )}
+                  </td>
                 </tr>
               ))}
               {orders.length === 0 && (
                 <tr>
-                  <td colSpan={user?.role === 'admin' ? "8" : "6"} style={{ textAlign: 'center' }}>No orders found.</td>
+                  <td colSpan="7" style={{ textAlign: 'center' }}>No orders found.</td>
                 </tr>
               )}
             </tbody>
